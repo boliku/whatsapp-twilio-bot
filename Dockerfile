@@ -2,15 +2,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar dependencias del sistema si es necesario
-RUN apt-update && apt-get install -y \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copiar requirements
+# Copiar requirements primero (para cache de Docker)
 COPY requirements.txt .
+
+# Instalar dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código
+# Copiar el resto del código
 COPY . .
 
 # Puerto que usa Cloud Run

@@ -52,7 +52,29 @@ def verify_twilio_signature(request: Request, body: dict) -> None:
 
 # ============ Cliente gspread (service account) ============
 _scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-_creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_JSON, _scope)
+
+# Detectar si estamos en Cloud Run o desarrollo local
+try:
+    # En Cloud Run, intentar cargar desde el secreto montado
+    if os.path.exists("/tmp/credentials.json"):
+        _creds = ServiceAccountCredentials.from_json_keyfile_name("/tmp/credentials.json", _scope)
+    else:
+        # En desarrollo local, usar el archivo normal
+        _creds = ServiceAccountCredentials.from_json_keyfile_name(CREDS_JSON, _scope)
+except Exception as e:
+    # Fallback: intentar con variables de entorno (si configuramos así)
+    try:
+        import json
+        creds_content = os.getenv("GOOGLE_CREDENTIALS_JSON")
+        if creds_content:
+            creds_dict = json.loads(creds_content)
+            _creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, _scope)
+        else:
+            raise Exception("No se pudieron cargar las credenciales de Google")
+    except Exception as e2:
+        print(f"Error cargando credenciales: {e}, {e2}")
+        raise
+
 _gclient = gspread.authorize(_creds)
 
 # ====== Encabezados de la única pestaña (orden final) ======
