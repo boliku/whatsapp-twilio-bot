@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.git/
+.vscode/
+.DS_Store
+*.log
+credenciales_google.json
+.pytest_cache/
+.coverage
+htmlcov/
